@@ -11,6 +11,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Optional.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -91,12 +95,24 @@ public class Main {
         String sheetName = "new-test-document";
 
 
-        creditDataList.stream()
+  /*      creditDataList.stream()
                 .filter(Objects::nonNull)
                 .findFirst()
                 .ifPresent(item ->
                         Try.run(() -> ExcelUtils.writeDataToExcel(filePath, sheetName, creditDataList))
                                 .onSuccess(suc-> System.out.println("Отправили excel"))
+                                .onFailure(ex -> System.out.println("Ошибка при экспорте данных: " + ex.getMessage()))
+                );*/
+
+        of(creditDataList)
+                .map(list -> list.stream()
+                        .filter(Objects::nonNull)
+                        .filter(na -> !na.getFirstName().equals("FirstName"))
+                        .collect(Collectors.toList()))
+                .filter(list -> !list.isEmpty())
+                .ifPresent(list ->
+                        Try.run(() -> ExcelUtils.writeDataToExcel(filePath, sheetName, list))
+                                .onSuccess(suc -> System.out.println("Отправили excel"))
                                 .onFailure(ex -> System.out.println("Ошибка при экспорте данных: " + ex.getMessage()))
                 );
 
