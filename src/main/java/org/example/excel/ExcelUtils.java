@@ -9,11 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
-import static org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND;
-import static org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER;
-import static org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE;
-
 @UtilityClass
 public class ExcelUtils {
 
@@ -24,7 +19,7 @@ public class ExcelUtils {
         writeDataToExcel(filePath, sheetName, List.of(data));
     }
 
-    public  <T extends ExcelDataModel> void writeDataToExcel(String filePath, String sheetName, List<T> data) throws IOException {
+    public <T extends ExcelDataModel> void writeDataToExcel(String filePath, String sheetName, List<T> data) throws IOException {
         if (data == null) {
             throw new IllegalArgumentException("Данные не должны быть null");
         }
@@ -33,23 +28,23 @@ public class ExcelUtils {
         Sheet sheet = workbook.createSheet(sheetName);
 
         int rowCount = 0;
-        CellStyle headerStyle = setDefaultStyle(workbook);
+
         Row headerRow = sheet.createRow(rowCount++);
-        headerRow.setHeight((short) (20 * 20)); // Настройка высоты header
+        headerRow.setHeight((short) (20 * 30)); // Настройка высоты header
 
         // Получаем количество колонок от первого объекта
         List<String> columns = data.get(0).getColumnNames();
 
-
+        CellStyle styleToHeader = createStyleToHeader(workbook);
         // Создаем заголовки столбцов
         for (int i = 1; i <= columns.size(); i++) {
             Cell cell = headerRow.createCell(i - 1);
-            cell.setCellValue(columns.get(i-1)); // Или используйте реальные имена столбцов
-            cell.setCellStyle(headerStyle);
+            cell.setCellValue(columns.get(i - 1)); // Или используйте реальные имена столбцов
+            cell.setCellStyle(styleToHeader);
         }
 
         // Заполняем данные
-        setDataInRow(data, sheet, rowCount, columns.size()); // Передаем стиль для данных
+        setDataInRow(data, sheet, rowCount, columns.size(), workbook); // Передаем стиль для данных
 
         // Автоматическая подгонка ширины столбцов
         for (int i = 0; i < columns.size(); i++) {
@@ -60,7 +55,7 @@ public class ExcelUtils {
         try (FileOutputStream fileOutputStream = new FileOutputStream(getFilePath(filePath, sheetName))) {
             workbook.write(fileOutputStream);
         } finally {
-            workbook.close(); // Всегда закрывайте книгу для освобождения ресурсов
+            workbook.close();
         }
     }
 
@@ -68,31 +63,53 @@ public class ExcelUtils {
         return filePath + "\\" + sheetName + ".xlsx"; // Правильный способ добавления обратного слэша
     }
 
-    private CellStyle setDefaultStyle(Workbook workbook) {
+    private static CellStyle createStyleToHeader(Workbook workbook) {
+
         CellStyle headerStyle = workbook.createCellStyle();
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setWrapText(true);
 
-        headerStyle.setFillForegroundColor(LIGHT_TURQUOISE.getIndex());
-        headerStyle.setFillPattern(SOLID_FOREGROUND);
-        headerStyle.setAlignment(CENTER);
-
-        headerStyle.setBorderBottom(THIN);
-        headerStyle.setBorderTop(THIN);
-        headerStyle.setBorderLeft(THIN);
-        headerStyle.setBorderRight(THIN);
-
+        // Устанавливаем шрифт для заголовка
         Font headerFont = workbook.createFont();
         headerFont.setBold(true);
-        headerFont.setFontHeightInPoints((short) 14); // Увеличиваем размер шрифта заголовка
         headerStyle.setFont(headerFont);
+        headerFont.setFontHeightInPoints((short) 11);
+        headerFont.setFontName("Arial");
 
+        // Настройка границ для заголовка
+        headerStyle.setBorderTop(BorderStyle.THIN);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        headerStyle.setBorderLeft(BorderStyle.THIN);
+        headerStyle.setBorderRight(BorderStyle.THIN);
         return headerStyle;
     }
 
-    private <T extends ExcelDataModel> void setDataInRow(List<T> data, Sheet sheet, int rowCount, int columnCount) {
+    private static CellStyle createStyleToBody(Workbook workbook) {
+        // Создаем стиль для данных с границами
+        CellStyle dataStyle = workbook.createCellStyle();
+        dataStyle.setAlignment(HorizontalAlignment.CENTER);
+        dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        // Настройка границ для данных
+        dataStyle.setBorderTop(BorderStyle.THIN);
+        dataStyle.setBorderBottom(BorderStyle.THIN);
+        dataStyle.setBorderLeft(BorderStyle.THIN);
+        dataStyle.setBorderRight(BorderStyle.THIN);
+        return dataStyle;
+    }
+
+
+    private <T extends ExcelDataModel> void setDataInRow(List<T> data, Sheet sheet, int rowCount, int columnCount, Workbook workbook) {
         for (T obj : data) {
             Row row = sheet.createRow(rowCount++);
             for (int i = 1; i <= columnCount; i++) {
+
                 Cell cell = row.createCell(i - 1);
+                CellStyle styleToBody = createStyleToBody(workbook);    //Стиль для данных
+                cell.setCellStyle(styleToBody);
                 Object value = obj.getValue(i); // Получаем значение по индексу
                 if (value instanceof Number) {
                     cell.setCellValue(((Number) value).doubleValue());

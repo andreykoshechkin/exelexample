@@ -68,12 +68,22 @@ public class Main {
                 CreditDataBuilder creditData = CreditDataBuilder.builder()
                         .dateCreditOpen(LocalDate.now().minusDays(i))
                         .firstName("FirstName" + i)
-                        .lastName("LastName" + i)
+                        .lastName("LastName1111111111111111111111111111111111111" + i)
                         .firstAmount("1000" + i)
                         .procent("5." + i).build();
                 creditDataList.add(creditData);
-                ExcelUtils.writeDataToExcel("E:\\Новая папка", "new-credit", creditDataList);
+
         }
+
+        CreditDataBuilder creditData = CreditDataBuilder.builder()
+                .dateCreditOpen(LocalDate.now().minusDays(1))
+                .firstName("FirstName" )
+                .lastName("Last")
+                .firstAmount("1000" )
+                .procent("5." ).build();
+
+            creditDataList.add(creditData);
+        ExcelUtils.writeDataToExcel("E:\\Новая папка", "new-credit", creditDataList);
     }
 
 }
