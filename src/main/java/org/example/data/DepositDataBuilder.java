@@ -1,37 +1,26 @@
 package org.example.data;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.example.annotion.ExcelPresenter;
 
 import java.math.BigDecimal;
 
-@Data
+
 @Builder
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DepositDataBuilder implements ExcelExportable{
+public class DepositDataBuilder extends AbstractExcelExportable{
 
+    @ExcelPresenter(name = "Номер заявки")
     private BigDecimal requestId;
+    @ExcelPresenter(name = "Имя")
     private String firstName;
+    @ExcelPresenter(name = "Фамилия")
     private String lastName;
+    @ExcelPresenter(name = "Депозитный счет")
     private String accountNumber;
 
-    @Override
-    public Object getValueByColumnIndex(int index) {
-        switch (index) {
-            case 1:
-                return accountNumber;
-            case 2:
-                return firstName;
-            case 3:
-                return lastName;
-            case 4:
-                return requestId;
-            default:
-                return null;
-        }
-    }
 }

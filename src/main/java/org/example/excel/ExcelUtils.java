@@ -3,7 +3,7 @@ package org.example.excel;
 import lombok.experimental.UtilityClass;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.example.data.ExcelExportable;
+import org.example.data.AbstractExcelExportable;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,14 +12,14 @@ import java.util.List;
 @UtilityClass
 public class ExcelUtils {
 
-    public static <T extends ExcelExportable> void writeDataToExcel(String filePath, String sheetName, T data, int[] columns) throws IOException {
+    public static <T extends AbstractExcelExportable> void writeDataToExcel(String filePath, String sheetName, T data) throws IOException {
         if (data == null) {
             throw new IllegalArgumentException("Данные не должны быть null");
         }
-        writeDataToExcel(filePath, sheetName, List.of(data), columns);
+        writeDataToExcel(filePath, sheetName, List.of(data));
     }
 
-    private static <T extends ExcelExportable> void writeDataToExcel(String filePath, String sheetName, List<T> data, int[] columns) throws IOException {
+    public  <T extends AbstractExcelExportable> void writeDataToExcel(String filePath, String sheetName, List<T> data) throws IOException {
         if (data == null) {
             throw new IllegalArgumentException("Данные не должны быть null");
         }
@@ -30,23 +30,29 @@ public class ExcelUtils {
         int rowCount = 0;
         CellStyle headerStyle = setDefaultStyle(workbook);
         Row headerRow = sheet.createRow(rowCount++);
-        headerRow.setHeight((short) (20 * 20));     //Настройка высоты header
+        headerRow.setHeight((short) (20 * 20)); // Настройка высоты header
+
+        // Получаем количество колонок от первого объекта
+        int columnCount = data.get(0).getColumnCount();
+        List<String> columnName = data.get(0).getColumnNames();
 
 
-        for (int i = 0; i < columns.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue("Column " + columns[i]); // Или используйте реальные имена столбцов
+        // Создаем заголовки столбцов
+        for (int i = 1; i <= columnCount; i++) {
+            Cell cell = headerRow.createCell(i - 1);
+            cell.setCellValue(columnName.get(i-1)); // Или используйте реальные имена столбцов
             cell.setCellStyle(headerStyle);
         }
 
-        // Write data
-        setDataInRow(data, columns, sheet, rowCount); // Передаем стиль для данных
+        // Заполняем данные
+        setDataInRow(data, sheet, rowCount, columnCount); // Передаем стиль для данных
 
-        for (int i = 0; i < columns.length; i++) {
+        // Автоматическая подгонка ширины столбцов
+        for (int i = 0; i < columnCount; i++) {
             sheet.autoSizeColumn(i);
         }
 
-        // Save file to the specified path
+        // Сохраняем файл по указанному пути
         try (FileOutputStream fileOutputStream = new FileOutputStream(getFilePath(filePath, sheetName))) {
             workbook.write(fileOutputStream);
             System.out.println(getFilePath(filePath, sheetName));
@@ -55,11 +61,11 @@ public class ExcelUtils {
         }
     }
 
-    private static String getFilePath(String filePath, String sheetName) {
+    private String getFilePath(String filePath, String sheetName) {
         return filePath + "\\" + sheetName + ".xlsx"; // Правильный способ добавления обратного слэша
     }
 
-    private static CellStyle setDefaultStyle(Workbook workbook) {
+    private CellStyle setDefaultStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
 
         headerStyle.setFillForegroundColor(IndexedColors.LIGHT_TURQUOISE.getIndex());
@@ -79,13 +85,12 @@ public class ExcelUtils {
         return headerStyle;
     }
 
-
-    private static <T extends ExcelExportable> void setDataInRow(List<T> data, int[] columns, Sheet sheet, int rowCount) {
+    private <T extends AbstractExcelExportable> void setDataInRow(List<T> data, Sheet sheet, int rowCount, int columnCount) {
         for (T obj : data) {
             Row row = sheet.createRow(rowCount++);
-            for (int i = 0; i < columns.length; i++) {
-                Cell cell = row.createCell(i);
-                Object value = obj.getValueByColumnIndex(columns[i]);
+            for (int i = 1; i <= columnCount; i++) {
+                Cell cell = row.createCell(i - 1);
+                Object value = obj.getValue(i); // Получаем значение по индексу
                 if (value instanceof Number) {
                     cell.setCellValue(((Number) value).doubleValue());
                 } else if (value instanceof Boolean) {
