@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DepositDataBuilder extends AbstractExcelExportable{
+public class DepositDataBuilder extends ExcelDataModel {
 
     @ExcelPresenter(name = "Номер заявки")
     private BigDecimal requestId;
