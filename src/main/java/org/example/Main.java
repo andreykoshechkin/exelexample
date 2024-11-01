@@ -1,5 +1,6 @@
 package org.example;
 
+import io.vavr.control.Try;
 import org.example.data.CreditDataBuilder;
 import org.example.data.DepositDataBuilder;
 import org.example.excel.ExcelUtils;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -56,34 +58,48 @@ public class Main {
                 .requestId(BigDecimal.valueOf(1111))
                 .build();
 
-        List<DepositDataBuilder> depositDataBuilder1 = List.of(depositDataBuilder, depositDataBuilder2, depositDataBuilder24, depositDataBuilder44, depositDataBuilder5);
+     //   List<DepositDataBuilder> depositDataBuilder1 = List.of(depositDataBuilder, depositDataBuilder2, depositDataBuilder24, depositDataBuilder44, depositDataBuilder5);
         int[] columns = {1, 2, 3, 4,};
 
-        ExcelUtils.writeDataToExcel("E:\\Новая папка", "new-test-document", depositDataBuilder1);
+        //ExcelUtils.writeDataToExcel("E:\\Новая папка", "new-test-document", depositDataBuilder1);
         // Дальше можно сохранить байты в файл или использовать их по необходимости
 
 
-            List<CreditDataBuilder> creditDataList = new ArrayList<>();
-            for (int i = 1; i <= 20; i++) {
-                CreditDataBuilder creditData = CreditDataBuilder.builder()
-                        .dateCreditOpen(LocalDate.now().minusDays(i))
-                        .firstName("FirstName" + i)
-                        .lastName("LastName1111111111111111111111111111111111111" + i)
-                        .firstAmount("1000" + i)
-                        .procent("5." + i).build();
-                creditDataList.add(creditData);
+        List<CreditDataBuilder> creditDataList = new ArrayList<>();
+        for (int i = 1; i <= 20; i++) {
+            CreditDataBuilder creditData = CreditDataBuilder.builder()
+                    .dateCreditOpen(LocalDate.now().minusDays(i))
+                    .firstName("FirstName" + i)
+                    .lastName("LastName1111111111111111111111111111111111111" + i)
+                    .firstAmount("1000" + i)
+                    .procent("5." + i).build();
+            creditDataList.add(creditData);
 
         }
 
         CreditDataBuilder creditData = CreditDataBuilder.builder()
                 .dateCreditOpen(LocalDate.now().minusDays(1))
-                .firstName("FirstName" )
+                .firstName("FirstName")
                 .lastName("Last")
-                .firstAmount("1000" )
-                .procent("5." ).build();
+                .firstAmount("1000")
+                .procent("5.").build();
 
-            creditDataList.add(creditData);
-        ExcelUtils.writeDataToExcel("E:\\Новая папка", "new-credit", creditDataList);
+        creditDataList.add(creditData);
+
+
+        String filePath = "E:\\Новая папка";
+        String sheetName = "new-test-document";
+
+
+        creditDataList.stream()
+                .filter(Objects::nonNull)
+                .findFirst()
+                .ifPresent(item ->
+                        Try.run(() -> ExcelUtils.writeDataToExcel(filePath, sheetName, creditDataList))
+                                .onSuccess(suc-> System.out.println("Отправили excel"))
+                                .onFailure(ex -> System.out.println("Ошибка при экспорте данных: " + ex.getMessage()))
+                );
+
     }
 
 }
